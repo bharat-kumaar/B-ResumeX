@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — {{ app_name }}{% endblock %}
+{% block body_class %}page-dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <aside class="dash-sidebar glass" id="dash-sidebar">
+        <div class="sidebar-brand">
+            <span class="logo-mark">B</span>
+            <span class="logo-text">Resume<span class="accent">X</span></span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('web.dashboard') }}" class="sidebar-link active">
+                <span class="sidebar-icon">◈</span> Overview
+            </a>
+            <a href="{{ url_for('web.analyze') }}" class="sidebar-link">
+                <span class="sidebar-icon">↑</span> Upload
+            </a>
+            <a href="{{ url_for('web.reports') }}" class="sidebar-link">
+                <span class="sidebar-icon">▣</span> History
+            </a>
+            <a href="{{ url_for('web.index') }}" class="sidebar-link">
+                <span class="sidebar-icon">⌂</span> Home
+            </a>
+        </nav>
+        <div class="sidebar-stats glass" id="sidebar-stats">
+            <p class="sidebar-stats-label">Platform Stats</p>
+            <div class="sidebar-stat-row">
+                <span>Total Scans</span>
+                <strong id="stat-total">—</strong>
+            </div>
+            <div class="sidebar-stat-row">
+                <span>Avg ATS</span>
+                <strong id="stat-avg">—</strong>
+            </div>
+        </div>
+    </aside>
+
+    <div class="dash-main">
+        <!-- Empty / upload state -->
+        <div id="dash-empty" class="dash-empty {% if analysis_id %}hidden{% endif %}">
+            <section class="dash-upload-hero glass" data-reveal="scale">
+                <div class="upload-icon-wrap">↑</div>
+                <h1>Upload Your Resume</h1>
+                <p>Drag & drop PDF or DOCX — get instant ATS score, skills, and AI suggestions.</p>
+                <div class="upload-dropzone glass" id="dash-upload-zone">
+                    <input type="file" id="dash-file-input" accept=".pdf,.doc,.docx,.txt" hidden>
+                    <p class="upload-hint">Drop file here or <span class="link-accent">browse</span></p>
+                    <div class="upload-formats">
+                        <span class="format-tag">PDF</span>
+                        <span class="format-tag">DOCX</span>
+                    </div>
+                </div>
+                <div id="dash-upload-progress" class="upload-progress hidden">
+                    <div class="upload-progress-bar"><div class="upload-progress-fill"></div></div>
+                    <p>Running neural analysis pipeline…</p>
+                </div>
+            </section>
+        </div>
+
+        <!-- Results dashboard -->
+        <div id="dash-results" class="{% if not analysis_id %}hidden{% endif %}">
+            <header class="dash-header">
+                <div>
+                    <span class="section-label">Intelligence Report</span>
+                    <h1 class="dash-title" id="dash-filename">Resume Analysis</h1>
+                    <p class="dash-meta" id="dash-meta">—</p>
+                </div>
+                <div class="dash-header-actions">
+                    <button type="button" class="btn btn-ghost btn-sm" id="btn-save-resume">Save Edits</button>
+                    <a href="#" class="btn btn-glow btn-sm" id="btn-export-pdf">PDF</a>
+                    <a href="#" class="btn btn-glow btn-sm" id="btn-export-docx">DOCX</a>
+                    <a href="{{ url_for('web.analyze') }}" class="btn btn-primary btn-sm">New Upload</a>
+                </div>
+            </header>
+
+            <nav class="dash-tabs" id="dash-tabs">
+                <button class="dash-tab active" data-panel="overview">Overview</button>
+                <button class="dash-tab" data-panel="sections">Sections</button>
+                <button class="dash-tab" data-panel="compare">Compare</button>
+                <button class="dash-tab" data-panel="editor">Resume Editor</button>
+                <button class="dash-tab" data-panel="insights">AI Insights</button>
+            </nav>
+
+            <div class="dash-panel active" id="panel-overview">
+            <section class="dash-card glass dash-card--full contact-overview" id="contact-overview" data-reveal></section>
+            <div class="dash-grid">
+                <!-- ATS Ring -->
+                <section class="dash-card glass dash-card--ats" data-reveal>
+                    <h2 class="dash-card-title">ATS Score</h2>
+                    <div class="dash-ats-ring">
+                        <svg viewBox="0 0 100 100" class="dash-ring-svg">
+                            <defs>
+                                <linearGradient id="dashGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#00f5ff"/>
+                                    <stop offset="100%" stop-color="#ff00aa"/>
+                                </linearGradient>
+                            </defs>
+                            <circle class="ring-bg" cx="50" cy="50" r="42"/>
+                            <circle class="ring-fg" id="dash-ring-fg" cx="50" cy="50" r="42"/>
+                        </svg>
+                        <div class="ring-center">
+                            <span class="ring-score" id="dash-ats-score">0</span>
+                            <span class="ring-grade" id="dash-ats-grade">—</span>
+                        </div>
+                    </div>
+                    <p class="strength-badge" id="dash-strength">—</p>
+                </section>
+
+                <!-- Breakdown bars -->
+                <section class="dash-card glass dash-card--wide" data-reveal data-reveal-delay="1">
+                    <h2 class="dash-card-title">Score Breakdown</h2>
+                    <div id="dash-breakdown" class="breakdown-list"></div>
+                </section>
+
+                <!-- Analytics cards -->
+                <section class="dash-card glass" data-reveal data-reveal-delay="2">
+                    <h2 class="dash-card-title">Resume Metrics</h2>
+                    <div class="metrics-grid" id="dash-metrics"></div>
+                </section>
+
+                <!-- Skills -->
+                <section class="dash-card glass dash-card--wide" data-reveal data-reveal-delay="2">
+                    <h2 class="dash-card-title">Detected Skills</h2>
+                    <div id="dash-skills" class="skills-cloud"></div>
+                    <h3 class="dash-subtitle">Missing Recommended</h3>
+                    <div id="dash-missing-skills" class="skills-missing"></div>
+                </section>
+
+                <!-- Skill chart -->
+                <section class="dash-card glass" data-reveal data-reveal-delay="3">
+                    <h2 class="dash-card-title">Skills by Category</h2>
+                    <div id="dash-skill-chart" class="skill-chart"></div>
+                </section>
+
+                <section class="dash-card glass" data-reveal data-reveal-delay="4">
+                    <h2 class="dash-card-title">Skill Match</h2>
+                    <div class="skill-match-ring" id="skill-match-display">0%</div>
+                    <p class="dash-subtitle" style="text-align:center">vs software role profile</p>
+                </section>
+
+                <section class="dash-card glass dash-card--wide" data-reveal data-reveal-delay="4">
+                    <h2 class="dash-card-title">Strengths & Weaknesses</h2>
+                    <div class="swot-grid">
+                        <div><h3 class="dash-subtitle">Strengths</h3><ul id="dash-strengths" class="swot-list"></ul></div>
+                        <div><h3 class="dash-subtitle">Weaknesses</h3><ul id="dash-weaknesses" class="swot-list"></ul></div>
+                    </div>
+                </section>
+            </div>
+            </div>
+
+            <div class="dash-panel hidden" id="panel-sections">
+                <section class="dash-card glass dash-card--full">
+                    <h2 class="dash-card-title">Detected Sections</h2>
+                    <div id="section-status-grid" class="section-status-grid"></div>
+                </section>
+                <section class="dash-card glass dash-card--full">
+                    <h2 class="dash-card-title">Parsed Content</h2>
+                    <div class="parsed-tabs">
+                        <button class="parsed-tab active" data-tab="experience">Experience</button>
+                        <button class="parsed-tab" data-tab="education">Education</button>
+                        <button class="parsed-tab" data-tab="projects">Projects</button>
+                        <button class="parsed-tab" data-tab="achievements">Achievements</button>
+                    </div>
+                    <div id="dash-parsed-content" class="parsed-content"></div>
+                </section>
+            </div>
+
+            <div class="dash-panel hidden" id="panel-compare">
+                <div class="compare-grid">
+                    <section class="dash-card glass">
+                        <h2 class="dash-card-title">Original ATS</h2>
+                        <div class="compare-score" id="compare-original">—</div>
+                    </section>
+                    <section class="dash-card glass">
+                        <h2 class="dash-card-title">Projected After Rebuild</h2>
+                        <div class="compare-score compare-score--up" id="compare-projected">—</div>
+                    </section>
+                </div>
+                <section class="dash-card glass dash-card--full">
+                    <h2 class="dash-card-title">ATS Detailed Report</h2>
+                    <div id="ats-detailed-report"></div>
+                </section>
+            </div>
+
+            <div class="dash-panel hidden" id="panel-editor">
+                <section class="dash-card glass dash-card--full resume-editor-panel">
+                    <h2 class="dash-card-title">Optimized Resume — Editable</h2>
+                    <p class="dash-subtitle">Edit sections below, then Save and Download PDF/DOCX.</p>
+                    <div id="resume-editor" class="resume-editor"></div>
+                </section>
+            </div>
+
+            <div class="dash-panel hidden" id="panel-insights">
+                <section class="dash-card glass dash-card--full">
+                    <h2 class="dash-card-title">AI Recommendations</h2>
+                    <div id="dash-suggestions" class="suggestions-list"></div>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.BResumeX_ANALYSIS_ID = {{ analysis_id|tojson if analysis_id else 'null' }};
+</script>
+<script src="{{ url_for('static', filename='js/modules/dashboard.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/modules/resume-editor.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/modules/dash-upload.js') }}" defer></script>
+{% endblock %}

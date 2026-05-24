@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}500 — {{ app_name }}{% endblock %}
+{% block content %}
+<section class="error-page container">
+    <span class="section-label" data-reveal>System Anomaly</span>
+    <h1 class="error-code" data-reveal>500</h1>
+    <p data-reveal data-reveal-delay="1">Internal neural systems encountered a critical fault.</p>
+    <a href="{{ url_for('web.index') }}" class="btn btn-glow" data-reveal data-reveal-delay="2">Reboot Interface</a>
+</section>
+{% endblock %}

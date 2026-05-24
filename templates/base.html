@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="B-ResumeX — AI Resume Intelligence Platform. Cyberpunk-grade ATS scoring and neural resume analytics.">
+    <meta name="theme-color" content="#030408">
+    <title>{% block title %}{{ app_name }}{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Orbitron:wght@500;600;700;800&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    <!-- Page loader -->
+    <div id="page-loader" class="page-loader" aria-hidden="false">
+        <div class="loader-core">
+            <div class="loader-ring"></div>
+            <div class="loader-ring"></div>
+            <span class="loader-logo">B</span>
+        </div>
+        <p class="loader-text">Initializing neural core</p>
+        <div class="loader-bar">
+            <div class="loader-bar-fill" id="loader-fill"></div>
+        </div>
+    </div>
+
+    <!-- Ambient layers -->
+    <div class="bg-gradient-anim" aria-hidden="true"></div>
+    <div class="bg-mesh" aria-hidden="true"></div>
+    <div class="bg-grid" aria-hidden="true"></div>
+    <div class="bg-scanlines" aria-hidden="true"></div>
+    <canvas id="particles-canvas" aria-hidden="true"></canvas>
+
+    <header class="site-header" id="site-header">
+        <nav class="nav-shell container--wide" aria-label="Main navigation">
+            <a href="{{ url_for('web.index') }}" class="logo">
+                <span class="logo-mark">B</span>
+                <span class="logo-text">Resume<span class="accent">X</span></span>
+            </a>
+
+            <ul class="nav-links" id="nav-links">
+                <li><a href="{{ url_for('web.index') }}" class="nav-link" data-nav="home">Home</a></li>
+                <li><a href="{{ url_for('web.index') }}#upload" class="nav-link">Upload</a></li>
+                <li><a href="{{ url_for('web.index') }}#analytics" class="nav-link">Analytics</a></li>
+                <li><a href="{{ url_for('web.index') }}#features" class="nav-link">Features</a></li>
+                <li><a href="{{ url_for('web.dashboard') }}" class="nav-link" data-nav="dashboard">Dashboard</a></li>
+                <li><a href="{{ url_for('web.analyze') }}" class="nav-link" data-nav="analyze">Analyze</a></li>
+                <li><a href="{{ url_for('web.reports') }}" class="nav-link" data-nav="reports">Reports</a></li>
+            </ul>
+
+            <div class="nav-actions">
+                <a href="{{ url_for('web.analyze') }}" class="btn btn-ghost btn-sm">API Docs</a>
+                <a href="{{ url_for('web.dashboard') }}" class="btn btn-glow btn-sm" id="nav-cta">
+                    Launch Dashboard
+                </a>
+                <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-glow-line" aria-hidden="true"></div>
+        <div class="container footer-grid">
+            <div class="footer-brand">
+                <a href="{{ url_for('web.index') }}" class="logo">
+                    <span class="logo-mark">B</span>
+                    <span class="logo-text">Resume<span class="accent">X</span></span>
+                </a>
+                <p>{{ app_tagline }}. Neural parsing, ATS intelligence, and career-grade analytics.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Platform</h4>
+                <a href="{{ url_for('web.index') }}#upload">Upload Resume</a>
+                <a href="{{ url_for('web.analyze') }}">Full Analysis</a>
+                <a href="{{ url_for('web.reports') }}">Reports</a>
+            </div>
+            <div class="footer-col">
+                <h4>Intelligence</h4>
+                <a href="{{ url_for('web.index') }}#analytics">AI Analytics</a>
+                <a href="{{ url_for('web.index') }}#ats">ATS Score</a>
+                <a href="/api/v1/health">API Health</a>
+            </div>
+            <div class="footer-col">
+                <h4>Connect</h4>
+                <a href="#">Documentation</a>
+                <a href="#">GitHub</a>
+                <a href="#">Contact</a>
+            </div>
+        </div>
+        <div class="container footer-bottom">
+            <span>&copy; 2026 {{ app_name }}. All systems operational.</span>
+            <span class="footer-status">
+                <span class="footer-status-dot"></span>
+                NEURAL CORE ONLINE
+            </span>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/modules/loader.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/modules/particles.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/modules/navbar.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/modules/scroll-reveal.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

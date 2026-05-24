@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}Home — {{ app_name }} | AI Resume Intelligence{% endblock %}
+{% block body_class %}page-home{% endblock %}
+
+{% block content %}
+<!-- ===================== HERO ===================== -->
+<section class="hero container" id="hero">
+    <div class="hero-content" data-reveal>
+        <div class="hero-badge glass">
+            <span class="badge-dot"></span>
+            Neural Resume Intelligence v1.0
+        </div>
+
+        <h1 class="hero-title">
+            <span class="line-glitch" data-text="Decode Your">Decode Your</span><br>
+            <span class="gradient-text">Career DNA</span>
+        </h1>
+
+        <p class="hero-subtitle">
+            B-ResumeX fuses cyber-grade NLP, ATS optimization, and real-time
+            intelligence to transform raw resumes into hire-ready signal.
+        </p>
+
+        <div class="hero-actions">
+            <a href="{{ url_for('web.dashboard') }}" class="btn btn-primary btn-lg">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7-7 7 7"/></svg>
+                Upload Resume
+            </a>
+            <a href="#features" class="btn btn-glow btn-lg">Explore Platform</a>
+        </div>
+
+        <div class="hero-metrics">
+            <div class="metric-mini">
+                <div class="val"><span data-counter="98">0</span>%</div>
+                <div class="lbl">Parse Accuracy</div>
+            </div>
+            <div class="metric-mini">
+                <div class="val"><span data-counter="12">0</span>+</div>
+                <div class="lbl">AI Dimensions</div>
+            </div>
+            <div class="metric-mini">
+                <div class="val">&lt;<span data-counter="3">0</span>s</div>
+                <div class="lbl">Analysis Time</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="hero-visual" data-reveal="right" data-reveal-delay="2">
+        <div class="hero-orbit" aria-hidden="true"></div>
+        <div class="hero-card glass">
+            <div class="hero-card-inner">
+                <div class="terminal-header">
+                    <span class="terminal-dot"></span>
+                    <span class="terminal-dot"></span>
+                    <span class="terminal-dot"></span>
+                </div>
+                <div class="terminal-body">
+                    <div><span class="cmd">$</span> b-resumex --analyze resume.pdf</div>
+                    <div><span class="ok">✓</span> Parsing document structure...</div>
+                    <div><span class="ok">✓</span> Extracting 24 skill vectors</div>
+                    <div><span class="ok">✓</span> ATS compatibility: <strong>94.2%</strong></div>
+                    <div><span class="warn">→</span> Generating intelligence report...</div>
+                    <div><span class="cmd">$</span> <span class="ok">Analysis complete.</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== UPLOAD CTA ===================== -->
+<section class="upload-section" id="upload">
+    <div class="container">
+        <span class="section-label" data-reveal>Resume Ingestion</span>
+        <h2 class="section-title" data-reveal>Upload. Analyze. <span class="gradient-text">Dominate.</span></h2>
+        <p class="section-desc" data-reveal data-reveal-delay="1">
+            Drop your resume into the neural pipeline. Instant parsing, scoring, and actionable intelligence.
+        </p>
+
+        <div class="upload-panel glass" data-reveal="scale" data-reveal-delay="2">
+            <div class="upload-benefits">
+                <div class="benefit-row">
+                    <span class="benefit-icon">AI</span>
+                    <div>
+                        <strong>Deep NLP Extraction</strong>
+                        <p style="color:var(--text-dim);font-size:0.88rem;margin-top:0.25rem">Skills, experience, education, and hidden signals.</p>
+                    </div>
+                </div>
+                <div class="benefit-row">
+                    <span class="benefit-icon">ATS</span>
+                    <div>
+                        <strong>ATS Compatibility Engine</strong>
+                        <p style="color:var(--text-dim);font-size:0.88rem;margin-top:0.25rem">Keyword gaps, format risks, and recruiter-readiness.</p>
+                    </div>
+                </div>
+                <div class="benefit-row">
+                    <span class="benefit-icon">RPT</span>
+                    <div>
+                        <strong>Intelligence Reports</strong>
+                        <p style="color:var(--text-dim);font-size:0.88rem;margin-top:0.25rem">Exportable JSON artifacts for iteration.</p>
+                    </div>
+                </div>
+                <a href="{{ url_for('web.analyze') }}" class="btn btn-primary">Open Full Analyzer</a>
+            </div>
+
+            <div class="upload-dropzone glass" id="home-upload-zone" role="button" tabindex="0">
+                <input type="file" id="home-resume-input" accept=".pdf,.doc,.docx,.txt" hidden>
+                <div class="upload-icon-wrap">↑</div>
+                <h3>Drop Resume Here</h3>
+                <p>or click to initialize neural scan</p>
+                <div class="upload-formats">
+                    <span class="format-tag">PDF</span>
+                    <span class="format-tag">DOCX</span>
+                    <span class="format-tag">DOC</span>
+                    <span class="format-tag">TXT</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== AI ANALYTICS ===================== -->
+<section class="analytics-section" id="analytics">
+    <div class="container">
+        <span class="section-label" data-reveal>Live Intelligence</span>
+        <h2 class="section-title" data-reveal>AI Analytics <span class="gradient-text">Dashboard</span></h2>
+        <p class="section-desc" data-reveal data-reveal-delay="1">
+            Real-time metrics powered by the B-ResumeX neural scoring engine.
+        </p>
+
+        <div class="analytics-grid">
+            <article class="analytics-card glass" data-reveal data-reveal-delay="1">
+                <div class="analytics-icon">◈</div>
+                <div class="analytics-value"><span data-counter="2400">0</span><span>+</span></div>
+                <div class="analytics-label">Resumes Processed</div>
+                <div class="analytics-spark" data-spark="8,6,9,7,10,8,11"></div>
+            </article>
+            <article class="analytics-card glass" data-reveal data-reveal-delay="2">
+                <div class="analytics-icon">◎</div>
+                <div class="analytics-value"><span data-counter="94">0</span><span>%</span></div>
+                <div class="analytics-label">Avg. ATS Match</div>
+                <div class="analytics-spark" data-spark="7,8,9,8,9,10,9"></div>
+            </article>
+            <article class="analytics-card glass" data-reveal data-reveal-delay="3">
+                <div class="analytics-icon">⬡</div>
+                <div class="analytics-value"><span data-counter="156">0</span><span>K</span></div>
+                <div class="analytics-label">Skills Indexed</div>
+                <div class="analytics-spark" data-spark="5,7,8,9,8,7,9"></div>
+            </article>
+            <article class="analytics-card glass" data-reveal data-reveal-delay="4">
+                <div class="analytics-icon">◇</div>
+                <div class="analytics-value"><span data-counter="99">0</span><span>.9%</span></div>
+                <div class="analytics-label">Uptime SLA</div>
+                <div class="analytics-spark" data-spark="10,10,9,10,10,10,10"></div>
+            </article>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== ATS SCORE PREVIEW ===================== -->
+<section class="ats-section" id="ats">
+    <div class="container ats-layout">
+        <div data-reveal="left">
+            <span class="section-label">ATS Engine</span>
+            <h2 class="section-title">ATS Score <span class="gradient-text">Preview</span></h2>
+            <p class="section-desc">
+                Multi-dimensional scoring across completeness, skills density,
+                structure, and contact signals — optimized for applicant tracking systems.
+            </p>
+            <a href="{{ url_for('web.analyze') }}" class="btn btn-glow" style="margin-top:1.5rem">Run Full Scan</a>
+        </div>
+
+        <div class="ats-visual" data-reveal="right">
+            <div class="ats-ring-wrap">
+                <svg class="ats-ring-svg" viewBox="0 0 100 100" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="atsGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#00f5ff"/>
+                            <stop offset="50%" stop-color="#8b5cf6"/>
+                            <stop offset="100%" stop-color="#ff00aa"/>
+                        </linearGradient>
+                    </defs>
+                    <circle class="ats-ring-bg" cx="50" cy="50" r="45"/>
+                    <circle class="ats-ring-progress" id="ats-ring" cx="50" cy="50" r="45"/>
+                </svg>
+                <div class="ats-ring-center">
+                    <span class="ats-score-num" id="ats-score-display">0</span>
+                    <span class="ats-grade" id="ats-grade-display">—</span>
+                </div>
+            </div>
+
+            <div class="ats-breakdown">
+            <div class="score-row" data-score="88" data-reveal data-reveal-delay="1">
+                <label>Completeness</label>
+                <div class="score-track"><div class="score-fill"></div></div>
+                <span class="score-pct">0%</span>
+            </div>
+            <div class="score-row" data-score="92" data-reveal data-reveal-delay="2">
+                <label>Skills Match</label>
+                <div class="score-track"><div class="score-fill"></div></div>
+                <span class="score-pct">0%</span>
+            </div>
+            <div class="score-row" data-score="85" data-reveal data-reveal-delay="3">
+                <label>Structure</label>
+                <div class="score-track"><div class="score-fill"></div></div>
+                <span class="score-pct">0%</span>
+            </div>
+            <div class="score-row" data-score="100" data-reveal data-reveal-delay="4">
+                <label>Contact Info</label>
+                <div class="score-track"><div class="score-fill"></div></div>
+                <span class="score-pct">0%</span>
+            </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== FEATURES ===================== -->
+<section class="features-section" id="features">
+    <div class="container">
+        <span class="section-label" data-reveal>Capabilities</span>
+        <h2 class="section-title" data-reveal>Platform <span class="gradient-text">Arsenal</span></h2>
+        <p class="section-desc" data-reveal data-reveal-delay="1">
+            Enterprise-grade modules built for scale, precision, and the future of hiring.
+        </p>
+
+        <div class="features-grid">
+            <article class="feature-card glass" data-reveal data-reveal-delay="1">
+                <span class="card-glow"></span>
+                <div class="feature-num">MODULE 01</div>
+                <h3>Neural Parser</h3>
+                <p>Multi-format ingestion with section detection, entity extraction, and semantic chunking.</p>
+                <span class="feature-link">Learn more →</span>
+            </article>
+            <article class="feature-card glass" data-reveal data-reveal-delay="2">
+                <span class="card-glow"></span>
+                <div class="feature-num">MODULE 02</div>
+                <h3>ATS Optimizer</h3>
+                <p>Keyword alignment, format validation, and recruiter-screening simulation.</p>
+                <span class="feature-link">Learn more →</span>
+            </article>
+            <article class="feature-card glass" data-reveal data-reveal-delay="3">
+                <span class="card-glow"></span>
+                <div class="feature-num">MODULE 03</div>
+                <h3>Score Matrix</h3>
+                <p>Weighted multi-axis grading with letter grades and improvement vectors.</p>
+                <span class="feature-link">Learn more →</span>
+            </article>
+            <article class="feature-card glass" data-reveal data-reveal-delay="1">
+                <span class="card-glow"></span>
+                <div class="feature-num">MODULE 04</div>
+                <h3>Report Engine</h3>
+                <p>Persistent JSON intelligence artifacts with SQL-backed retrieval.</p>
+                <span class="feature-link">Learn more →</span>
+            </article>
+            <article class="feature-card glass" data-reveal data-reveal-delay="2">
+                <span class="card-glow"></span>
+                <div class="feature-num">MODULE 05</div>
+                <h3>REST API v1</h3>
+                <p>Pipeline-ready endpoints for automated resume intelligence at scale.</p>
+                <span class="feature-link">Learn more →</span>
+            </article>
+            <article class="feature-card glass" data-reveal data-reveal-delay="3">
+                <span class="card-glow"></span>
+                <div class="feature-num">MODULE 06</div>
+                <h3>ML Model Hub</h3>
+                <p>Hot-swappable transformers and sklearn models in the ai_engine layer.</p>
+                <span class="feature-link">Learn more →</span>
+            </article>
+        </div>
+    </div>
+</section>
+
+<!-- ===================== FINAL CTA ===================== -->
+<section class="cta-final">
+    <div class="container">
+        <div class="cta-final-inner glass" data-reveal="scale">
+            <h2>Your next role starts with <span class="gradient-text">better signal</span></h2>
+            <p>Join the next generation of candidates using AI to win the hiring game.</p>
+            <a href="{{ url_for('web.dashboard') }}" class="btn btn-primary btn-lg">Initialize Analysis</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/modules/counters.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/modules/ats-preview.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/modules/sparklines.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/modules/home-upload.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/pages/home.js') }}" defer></script>
+{% endblock %}

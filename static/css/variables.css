@@ -1,0 +1,55 @@
+/* Design tokens — B-ResumeX Cyberpunk System */
+:root {
+  /* Core palette */
+  --void: #030408;
+  --void-2: #080b14;
+  --panel: rgba(10, 14, 28, 0.72);
+  --panel-solid: #0c1020;
+  --glass: rgba(12, 18, 36, 0.55);
+  --glass-border: rgba(0, 245, 255, 0.22);
+  --glass-highlight: rgba(255, 255, 255, 0.06);
+
+  /* Neon spectrum */
+  --neon-cyan: #00f5ff;
+  --neon-magenta: #ff00aa;
+  --neon-purple: #8b5cf6;
+  --neon-lime: #39ff14;
+  --neon-amber: #ffb800;
+
+  /* Semantic */
+  --text: #eef2ff;
+  --text-dim: #94a3b8;
+  --text-faint: #64748b;
+  --danger: #ff3366;
+  --success: #00ff9d;
+
+  /* Gradients */
+  --grad-hero: linear-gradient(135deg, #00f5ff 0%, #8b5cf6 45%, #ff00aa 100%);
+  --grad-mesh-1: radial-gradient(ellipse 80% 50% at 20% 20%, rgba(0, 245, 255, 0.15), transparent);
+  --grad-mesh-2: radial-gradient(ellipse 60% 40% at 80% 10%, rgba(255, 0, 170, 0.12), transparent);
+  --grad-mesh-3: radial-gradient(ellipse 70% 50% at 50% 90%, rgba(139, 92, 246, 0.14), transparent);
+
+  /* Typography */
+  --font-display: "Orbitron", "Rajdhani", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+
+  /* Spacing & shape */
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 22px;
+  --radius-xl: 32px;
+  --nav-height: 72px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast: 0.2s;
+  --dur: 0.35s;
+  --dur-slow: 0.6s;
+
+  /* Effects */
+  --shadow-glow: 0 0 40px rgba(0, 245, 255, 0.25);
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.45);
+  --blur-glass: 20px;
+}

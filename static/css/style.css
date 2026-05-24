@@ -1,0 +1,7 @@
+/* B-ResumeX — Master stylesheet (modular imports) */
+@import url("variables.css");
+@import url("base.css");
+@import url("animations.css");
+@import url("components.css");
+@import url("home.css");
+@import url("pages.css");

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Reports — {{ app_name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<style>
+.reports-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+  list-style: none;
+  padding-bottom: 4rem;
+}
+.report-card { padding: 1.5rem; border-radius: var(--radius-lg); }
+.report-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+.report-grade { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; }
+.report-score { font-family: var(--font-mono); color: var(--neon-cyan); }
+.report-card h3 { font-size: 1rem; margin-bottom: 0.35rem; word-break: break-all; }
+.report-date { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 1rem; }
+.grade-A { color: var(--success); }
+.grade-B { color: var(--neon-cyan); }
+.grade-C { color: var(--neon-amber); }
+.grade-D, .grade-F { color: var(--danger); }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page-header container">
+    <span class="section-label" data-reveal>Intelligence Archive</span>
+    <h1 class="page-title" data-reveal>Analysis <span class="gradient-text">History</span></h1>
+    <p class="page-desc" data-reveal data-reveal-delay="1">All resume scans stored in your B-ResumeX database.</p>
+</section>
+
+<section class="container">
+    <div class="empty-state glass" id="reports-empty" data-reveal="scale">
+        <p style="margin-bottom:1.5rem">No reports yet. Upload a resume to generate your first intelligence report.</p>
+        <a href="{{ url_for('web.dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
+    </div>
+    <ul id="reports-container" class="hidden"></ul>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/modules/reports.js') }}" defer></script>
+{% endblock %}

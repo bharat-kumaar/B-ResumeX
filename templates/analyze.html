@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Analyze — {{ app_name }}{% endblock %}
+
+{% block content %}
+<section class="page-header container">
+    <span class="section-label" data-reveal>Neural Workspace</span>
+    <h1 class="page-title" data-reveal>Resume <span class="gradient-text">Analysis</span></h1>
+    <p class="page-desc" data-reveal data-reveal-delay="1">
+        Upload PDF or DOCX — real ATS scoring, skill detection, and AI recommendations.
+    </p>
+</section>
+
+<section class="analyze-workspace container">
+    <form id="upload-form" class="upload-zone-page" enctype="multipart/form-data" data-reveal="scale">
+        <input type="file" id="resume-input" name="resume" accept=".pdf,.doc,.docx" hidden>
+        <label for="resume-input" class="upload-label-page glass" id="upload-label">
+            <div class="upload-icon-wrap" id="upload-icon">↑</div>
+            <h3 style="font-family:var(--font-display)" id="upload-title">Drop resume or browse</h3>
+            <p style="color:var(--text-dim);font-size:0.88rem" id="upload-sub">PDF, DOCX — max 16 MB · Validated & parsed in seconds</p>
+            <div class="upload-formats" style="margin-top:1rem">
+                <span class="format-tag">PDF</span>
+                <span class="format-tag">DOCX</span>
+            </div>
+            <div class="upload-progress hidden" id="upload-progress" style="margin-top:1.5rem;width:100%">
+                <div class="upload-progress-bar"><div class="upload-progress-fill"></div></div>
+            </div>
+        </label>
+    </form>
+
+    <div id="analysis-loading" class="loading-panel glass hidden" aria-live="polite">
+        <div class="analysis-spinner"></div>
+        <p style="text-align:center;color:var(--text-dim)">Parsing · Scoring ATS · Detecting skills · Generating suggestions…</p>
+    </div>
+</section>
+
+<p class="container" style="text-align:center;padding-bottom:3rem;color:var(--text-dim);font-size:0.88rem">
+    After analysis you’ll be redirected to your <a href="{{ url_for('web.dashboard') }}" style="color:var(--neon-cyan)">live dashboard</a>.
+</p>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/modules/upload.js') }}" defer></script>
+{% endblock %}

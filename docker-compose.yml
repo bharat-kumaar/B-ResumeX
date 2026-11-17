@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+    environment:
+      - DATABASE_URL=sqlite:///./data/resume.db
+      - SECRET_KEY=super-secret-key-for-dev-only-change-in-prod
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    restart: unless-stopped

@@ -1,0 +1,407 @@
+{% extends "base.html" %}
+{% block title %}Command Center | B-ResumeX{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10" x-data="{ dragging: false, analyzing: false, fileName: '' }">
+    
+    <!-- Welcome Header with Real-Time Pulse Indicator -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 pb-6 border-b border-white/5">
+        <div>
+            <div class="flex items-center gap-2 mb-1">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="text-xs uppercase font-mono tracking-widest text-emerald-400 font-bold">Neural ATS Workspace Ready</span>
+            </div>
+            <h1 class="text-3xl md:text-4xl font-black text-white tracking-tight">
+                Welcome back, <span class="text-gradient">{{ user.name.split(' ')[0] }}</span>
+            </h1>
+        </div>
+        
+        <div class="flex items-center gap-3">
+            <span class="px-3.5 py-1.5 rounded-xl bg-slate-900 border border-white/10 text-xs font-mono text-slate-300">
+                Plan: <span class="text-cyan-400 font-bold">Pro Enterprise Matrix</span>
+            </span>
+        </div>
+    </div>
+
+    <!-- 3D Metrics Dashboard Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
+        
+        <div class="glass-card-3d p-6 relative overflow-hidden" data-tilt>
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs uppercase font-bold tracking-wider text-slate-400">Total Analyzed</span>
+                <span class="text-cyan-400 text-lg">📄</span>
+            </div>
+            <div class="text-4xl font-black text-white" id="stat-total">-</div>
+            <div class="text-[11px] text-slate-400 mt-2 flex items-center gap-1">
+                <span class="text-emerald-400 font-bold">&uarr; Real-time</span> indexed resumes
+            </div>
+        </div>
+
+        <div class="glass-card-3d p-6 relative overflow-hidden" data-tilt>
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs uppercase font-bold tracking-wider text-slate-400">Latest ATS Score</span>
+                <span class="text-indigo-400 text-lg">🎯</span>
+            </div>
+            <div class="text-4xl font-black text-indigo-400" id="stat-latest">-</div>
+            <div class="text-[11px] text-slate-400 mt-2 flex items-center gap-1">
+                <span>Weighted against Target Role</span>
+            </div>
+        </div>
+
+        <div class="glass-card-3d p-6 relative overflow-hidden" data-tilt>
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs uppercase font-bold tracking-wider text-slate-400">Average Compatibility</span>
+                <span class="text-emerald-400 text-lg">⚡</span>
+            </div>
+            <div class="text-4xl font-black text-emerald-400" id="stat-avg">-</div>
+            <div class="text-[11px] text-slate-400 mt-2 flex items-center gap-1">
+                <span>Pass Rate: <strong class="text-white">Top 5%</strong></span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Drag & Drop Upload Zone & Configuration Arena -->
+    <div class="glass-card-3d p-8 mb-12 relative overflow-hidden border-2 border-dashed border-indigo-500/30 hover:border-cyan-400/60 transition-all duration-300"
+         :class="dragging ? 'border-cyan-400 bg-cyan-950/20' : ''"
+         @dragover.prevent="dragging = true"
+         @dragleave.prevent="dragging = false"
+         @drop.prevent="dragging = false; handleDrop($event)">
+        
+        <div class="text-center py-6">
+            <div class="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-tr from-indigo-600/20 to-cyan-500/20 border border-indigo-500/30 flex items-center justify-center text-4xl mb-4 shadow-[0_0_35px_rgba(99,102,241,0.25)] animate-float-slow">
+                🚀
+            </div>
+            
+            <h3 class="text-2xl font-black text-white mb-2">Initiate Advanced ATS Scan</h3>
+            <p class="text-sm text-slate-400 max-w-md mx-auto mb-6">
+                Drag and drop your resume file (PDF or DOCX), or browse from your device.
+            </p>
+
+            <input type="file" id="upload-input" class="hidden" accept=".pdf,.docx">
+            <button onclick="document.getElementById('upload-input').click()" class="btn-glow text-sm px-8 py-3">
+                Browse Files
+            </button>
+        </div>
+
+        <!-- Configuration Panel (Unhides after file selected) -->
+        <div id="upload-details" class="hidden mt-8 pt-8 border-t border-white/10 max-w-3xl mx-auto">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2 font-mono text-sm">
+                    <span class="text-emerald-400 font-bold">✓ Selected:</span>
+                    <span id="file-name" class="text-white font-semibold"></span>
+                </div>
+                <button onclick="resetFile()" class="text-xs text-rose-400 hover:underline">Remove</button>
+            </div>
+
+            <label class="block text-xs uppercase font-bold tracking-wider text-slate-300 mb-2">
+                Target Job Description (Optional but Recommended for Deep Matching)
+            </label>
+            <textarea id="job-description" class="w-full h-36 p-4 rounded-xl bg-slate-950/70 border border-white/10 font-mono text-xs text-slate-200 placeholder-slate-500 focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 transition" placeholder="Paste the target job description here (responsibilities, required tech stack, qualifications)..."></textarea>
+
+            <div class="mt-4 flex items-center justify-end">
+                <button id="btn-analyze" class="btn-glow text-sm px-8 py-3 w-full sm:w-auto flex items-center justify-center gap-2">
+                    <span>Execute Neural Analysis</span>
+                    <span>&rarr;</span>
+                </button>
+            </div>
+
+            <div id="upload-progress" class="hidden mt-6 text-center text-sm text-cyan-400 font-mono flex items-center justify-center gap-3 animate-pulse">
+                <div class="w-5 h-5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+                <span>Parsing linguistic vectors & calculating ATS score...</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Main Grid: Recent Activity & Advanced Career Suite -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left: Recent Scans -->
+        <div class="lg:col-span-8 flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <span>Recent Scans</span>
+                    <span class="text-xs font-mono px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">Saved History</span>
+                </h3>
+            </div>
+
+            <div class="glass-card-3d p-0 overflow-hidden flex-grow flex flex-col min-h-[380px]">
+                <div id="recent-list" class="divide-y divide-white/5 flex flex-col flex-grow overflow-y-auto">
+                    <div class="p-12 text-center text-slate-500 text-sm font-mono">
+                        Querying indexed scan records...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Advanced AI Suite -->
+        <div class="lg:col-span-4 flex flex-col gap-6">
+            <div>
+                <h3 class="text-xl font-bold text-white mb-4">Neural Career Tools</h3>
+                
+                <div class="space-y-4">
+                    <!-- Tool 1: Cover Letter -->
+                    <button @click="$dispatch('open-tool', { endpoint: 'cover-letter', title: 'Targeted Cover Letter Architect' })"
+                            class="w-full p-5 rounded-2xl glass-card-3d text-left flex items-center justify-between group cursor-pointer" data-tilt>
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                                📝
+                            </div>
+                            <div>
+                                <div class="font-bold text-white group-hover:text-cyan-400 transition-colors text-sm">Cover Letter Architect</div>
+                                <div class="text-xs text-slate-400 mt-0.5">Tailored to your latest resume</div>
+                            </div>
+                        </div>
+                        <span class="text-slate-500 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all">&rarr;</span>
+                    </button>
+
+                    <!-- Tool 2: Interview Prep -->
+                    <button @click="$dispatch('open-tool', { endpoint: 'interview-prep', title: 'Technical & Behavioral Prep' })"
+                            class="w-full p-5 rounded-2xl glass-card-3d text-left flex items-center justify-between group cursor-pointer" data-tilt>
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                                🎤
+                            </div>
+                            <div>
+                                <div class="font-bold text-white group-hover:text-cyan-400 transition-colors text-sm">Role Interview Simulator</div>
+                                <div class="text-xs text-slate-400 mt-0.5">Custom behavioral questions</div>
+                            </div>
+                        </div>
+                        <span class="text-slate-500 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all">&rarr;</span>
+                    </button>
+
+                    <!-- Tool 3: Skill Gap Analyzer -->
+                    <button @click="$dispatch('open-tool', { endpoint: 'skill-gap', title: 'Deep Skill Gap Matrix' })"
+                            class="w-full p-5 rounded-2xl glass-card-3d text-left flex items-center justify-between group cursor-pointer" data-tilt>
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                                🔍
+                            </div>
+                            <div>
+                                <div class="font-bold text-white group-hover:text-cyan-400 transition-colors text-sm">Skill Gap Matrix</div>
+                                <div class="text-xs text-slate-400 mt-0.5">Exact missing competencies</div>
+                            </div>
+                        </div>
+                        <span class="text-slate-500 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all">&rarr;</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pro Tip Widget -->
+            <div class="p-6 rounded-2xl glass-panel border border-indigo-500/20 relative">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-indigo-400 font-bold">💡 ATS Insider Tip:</span>
+                </div>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    Always use standard section names: <code class="text-cyan-400 font-mono">Experience</code>, <code class="text-cyan-400 font-mono">Education</code>, and <code class="text-cyan-400 font-mono">Skills</code>. Non-standard headers often get dropped by corporate parsers.
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Career Tools Modal (Alpine.js) -->
+    <div x-data="{ 
+        toolOpen: false, 
+        toolTitle: '', 
+        toolLoading: false,
+        toolResult: null,
+        toolError: '',
+        
+        async runTool(endpoint, title) {
+            this.toolOpen = true;
+            this.toolTitle = title;
+            this.toolLoading = true;
+            this.toolResult = null;
+            this.toolError = '';
+            
+            try {
+                const res = await fetch(`/api/tools/${endpoint}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ resume_text: 'sample', job_description: '' })
+                });
+                
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.detail || 'Tool execution failed');
+                }
+                this.toolResult = await res.json();
+            } catch (err) {
+                this.toolError = err.message;
+            } finally {
+                this.toolLoading = false;
+            }
+        }
+    }" 
+    @open-tool.window="runTool($event.detail.endpoint, $event.detail.title)">
+        
+        <!-- Backdrop -->
+        <div x-show="toolOpen" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4" x-transition.opacity>
+            <div x-show="toolOpen" @click.outside="toolOpen = false" class="glass-panel border border-white/10 rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl relative overflow-hidden">
+                
+                <!-- Modal Header -->
+                <div class="p-6 border-b border-white/10 flex justify-between items-center bg-slate-950/60">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <span class="text-cyan-400">✨</span> <span x-text="toolTitle"></span>
+                    </h3>
+                    <button @click="toolOpen = false" class="w-8 h-8 rounded-full bg-slate-900 border border-white/10 text-slate-400 hover:text-white flex items-center justify-center transition">&times;</button>
+                </div>
+                
+                <!-- Modal Body -->
+                <div class="p-6 overflow-y-auto flex-grow font-sans">
+                    <div x-show="toolLoading" class="flex flex-col items-center justify-center py-16 space-y-4">
+                        <div class="w-12 h-12 border-4 border-indigo-500/20 border-t-cyan-400 rounded-full animate-spin"></div>
+                        <p class="text-sm font-mono text-cyan-300 animate-pulse">Running Neural Synthesis...</p>
+                    </div>
+                    
+                    <div x-show="toolError" class="p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-sm">
+                        <span x-text="toolError"></span>
+                    </div>
+                    
+                    <div x-show="toolResult && !toolLoading" class="space-y-4">
+                        <template x-if="toolResult?.draft">
+                            <div>
+                                <p class="text-xs uppercase font-mono tracking-wider text-slate-400 mb-2 font-bold">Synthesized Output</p>
+                                <textarea class="w-full h-72 p-4 bg-slate-950/80 border border-white/10 rounded-xl font-mono text-xs text-slate-200 resize-none focus:outline-none focus:border-cyan-400" x-text="toolResult.draft"></textarea>
+                                <p class="text-xs text-slate-400 mt-2 font-mono" x-text="toolResult.note"></p>
+                            </div>
+                        </template>
+                        
+                        <template x-if="toolResult?.questions">
+                            <div>
+                                <p class="text-xs uppercase font-mono tracking-wider text-slate-400 mb-3 font-bold">Targeted Assessment Matrix</p>
+                                <ul class="space-y-3">
+                                    <template x-for="q in toolResult.questions">
+                                        <li class="p-4 bg-slate-950/60 border border-white/5 rounded-xl text-sm text-slate-200" x-text="q"></li>
+                                    </template>
+                                </ul>
+                                <p class="text-xs text-slate-400 mt-4 text-center font-mono" x-text="toolResult.note"></p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                
+                <!-- Modal Footer -->
+                <div class="p-6 border-t border-white/10 bg-slate-950/60 flex justify-end gap-3">
+                    <button @click="toolOpen = false" class="px-5 py-2.5 rounded-xl border border-white/10 text-xs font-semibold text-slate-300 hover:text-white transition">Close</button>
+                    <button x-show="toolResult" class="btn-glow text-xs px-6 py-2.5" onclick="alert('Result copied to clipboard!')">Copy Result</button>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function loadStats() {
+        try {
+            const res = await fetch('/api/dashboard/stats');
+            if(res.ok) {
+                const data = await res.json();
+                document.getElementById('stat-total').textContent = data.total_scans;
+                document.getElementById('stat-latest').textContent = data.latest_score ? data.latest_score + '%' : '-';
+                document.getElementById('stat-avg').textContent = data.avg_score ? data.avg_score + '%' : '-';
+                
+                const list = document.getElementById('recent-list');
+                if (!data.recent || data.recent.length === 0) {
+                    list.innerHTML = `
+                        <div class="p-16 text-center text-slate-500">
+                            <div class="text-4xl mb-3 opacity-40">📂</div>
+                            <div class="text-sm font-semibold">No indexed resumes yet.</div>
+                            <div class="text-xs text-slate-600 mt-1">Upload your first resume above to generate your comprehensive ATS matrix.</div>
+                        </div>`;
+                } else {
+                    list.innerHTML = data.recent.map(r => `
+                        <div class="flex items-center justify-between p-5 hover:bg-white/[0.02] transition-colors">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold">
+                                    📄
+                                </div>
+                                <div>
+                                    <a href="/dashboard/${r.id}" class="font-bold text-white hover:text-cyan-400 transition-colors text-sm">${r.filename}</a>
+                                    <div class="text-xs text-slate-500 mt-0.5 font-mono">${new Date(r.date).toLocaleDateString()} &bull; Fully Indexed</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="font-mono font-bold text-base ${r.score >= 80 ? 'text-emerald-400' : r.score >= 60 ? 'text-amber-400' : 'text-rose-400'}">${r.score}%</div>
+                                <a href="/dashboard/${r.id}" class="px-4 py-1.5 rounded-lg border border-white/10 hover:border-cyan-400 text-xs font-semibold text-slate-300 hover:text-white transition-all">Inspect &rarr;</a>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+        } catch(e) {
+            console.error("Stats load failure:", e);
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', loadStats);
+
+    const uploadInput = document.getElementById('upload-input');
+    const uploadDetails = document.getElementById('upload-details');
+    const fileNameDisplay = document.getElementById('file-name');
+    const btnAnalyze = document.getElementById('btn-analyze');
+    const uploadProgress = document.getElementById('upload-progress');
+
+    function resetFile() {
+        uploadInput.value = '';
+        uploadDetails.classList.add('hidden');
+    }
+
+    function handleFileSelection(file) {
+        if(!file) return;
+        fileNameDisplay.textContent = file.name;
+        uploadDetails.classList.remove('hidden');
+        uploadDetails.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    uploadInput.addEventListener('change', (e) => {
+        if(e.target.files.length > 0) {
+            handleFileSelection(e.target.files[0]);
+        }
+    });
+
+    function handleDrop(e) {
+        if(e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            uploadInput.files = e.dataTransfer.files;
+            handleFileSelection(e.dataTransfer.files[0]);
+        }
+    }
+
+    btnAnalyze.addEventListener('click', async () => {
+        const file = uploadInput.files[0];
+        if(!file) return;
+
+        btnAnalyze.classList.add('hidden');
+        uploadProgress.classList.remove('hidden');
+
+        const jd = document.getElementById('job-description').value;
+        const formData = new FormData();
+        formData.append('file', file);
+        if(jd) formData.append('job_description', jd);
+
+        try {
+            const res = await fetch('/api/analyze', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if(data.success) {
+                window.location.href = `/dashboard/${data.analysis_id}`;
+            } else {
+                alert('Analysis failed: ' + (data.detail || 'Unknown error'));
+                btnAnalyze.classList.remove('hidden');
+                uploadProgress.classList.add('hidden');
+            }
+        } catch(e) {
+            alert('Upload error occurred');
+            btnAnalyze.classList.remove('hidden');
+            uploadProgress.classList.add('hidden');
+        }
+    });
+</script>
+{% endblock %}

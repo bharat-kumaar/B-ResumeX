@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}B-ResumeX | Next-Gen AI ATS Platform{% endblock %}</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js & Intersect -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/intersect@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Vanilla Tilt for 3D card physics -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
+    <!-- Canvas Confetti for score celebrations -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#07090e',
+                        surface: '#0f1420',
+                        'surface-card': 'rgba(17, 24, 39, 0.7)',
+                        border: '#1f293d',
+                        primary: '#f8fafc',
+                        muted: '#94a3b8',
+                        accent: '#6366f1',
+                        'accent-glow': '#818cf8',
+                        cyan: '#06b6d4',
+                        violet: '#8b5cf6',
+                        emerald: '#10b981',
+                        rose: '#f43f5e',
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    animation: {
+                        'pulse-glow': 'pulseGlow 4s ease-in-out infinite',
+                        'float-slow': 'float 6s ease-in-out infinite',
+                        'scan-laser': 'scanLaser 3s ease-in-out infinite alternate',
+                        'spin-slow': 'spin 20s linear infinite',
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%, 100%': { opacity: '0.4', transform: 'scale(1)' },
+                            '50%': { opacity: '0.8', transform: 'scale(1.05)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-12px)' },
+                        },
+                        scanLaser: {
+                            '0%': { top: '5%', opacity: '0.8' },
+                            '50%': { opacity: '1' },
+                            '100%': { top: '92%', opacity: '0.8' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        
+        :root {
+            --bg-color: #07090e;
+            --accent-grad: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #06b6d4 100%);
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            color: #f8fafc;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            selection-background-color: #6366f1;
+            selection-color: #ffffff;
+        }
+
+        /* 3D Canvas Background */
+        #cyber-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.65;
+        }
+
+        /* Ultra-Modern Glassmorphism */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-card-3d {
+            background: linear-gradient(135deg, rgba(20, 29, 50, 0.6) 0%, rgba(11, 17, 30, 0.8) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 1.25rem;
+            transform-style: preserve-3d;
+            transform: perspective(1000px);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-card-3d:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 15px 35px -5px rgba(99, 102, 241, 0.2), 0 0 20px rgba(6, 182, 212, 0.15);
+        }
+
+        /* Gradient Glow Texts */
+        .text-gradient {
+            background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 40%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .text-gradient-fire {
+            background: linear-gradient(135deg, #f43f5e 0%, #fb923c 50%, #facc15 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Glow buttons */
+        .btn-glow {
+            position: relative;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%);
+            color: #ffffff;
+            font-weight: 600;
+            border-radius: 9999px;
+            padding: 0.75rem 1.75rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-glow:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 0 40px rgba(99, 102, 241, 0.7), 0 0 15px rgba(6, 182, 212, 0.5);
+        }
+
+        .btn-glow::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(60deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transform: rotate(30deg) translateY(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .btn-glow:hover::after {
+            transform: rotate(30deg) translateY(100%);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #07090e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col relative selection:bg-indigo-500 selection:text-white">
+
+    <!-- Interactive 3D Cyber Particle Background -->
+    <canvas id="cyber-canvas"></canvas>
+
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 z-50 glass-panel border-b border-white/5 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <a href="/" class="flex items-center gap-3 group">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-cyan-400 p-[1.5px] shadow-lg shadow-indigo-500/25 group-hover:shadow-indigo-500/50 transition-all duration-300">
+                    <div class="w-full h-full bg-[#090d16] rounded-[10px] flex items-center justify-center">
+                        <span class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-tr from-indigo-400 to-cyan-300">B</span>
+                    </div>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-xl font-extrabold tracking-tight text-white flex items-center gap-1">
+                        B-Resume<span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400">X</span>
+                        <span class="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 ml-1">AI 3.0</span>
+                    </span>
+                    <span class="text-[10px] text-muted tracking-wider uppercase font-medium">Enterprise ATS Matrix</span>
+                </div>
+            </a>
+            
+            <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+                <a href="/#features" class="hover:text-cyan-400 transition-colors">Features</a>
+                <a href="/#scanner-simulator" class="hover:text-indigo-400 transition-colors flex items-center gap-1.5">
+                    <span>3D Scanner</span>
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                </a>
+                <a href="/#how-it-works" class="hover:text-cyan-400 transition-colors">How It Works</a>
+                <a href="/#benchmark" class="hover:text-cyan-400 transition-colors">ATS Benchmarks</a>
+            </nav>
+            
+            <div class="flex items-center gap-4">
+                {% if user %}
+                    <a href="/dashboard" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-surface border border-white/10 hover:border-indigo-500/50 text-white font-medium text-sm transition-all group">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                        <span>{{ user.name.split(' ')[0] }}'s Matrix</span>
+                        <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
+                    </a>
+                    <a href="/logout" class="text-xs text-slate-400 hover:text-rose-400 transition-colors">Logout</a>
+                {% else %}
+                    <a href="/login" class="text-sm font-semibold text-slate-300 hover:text-white transition-colors">Log In</a>
+                    <a href="/signup" class="btn-glow text-sm">Get Started Free</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dynamic Content -->
+    <main class="flex-grow z-10 relative">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Cyberpunk Footer -->
+    <footer class="glass-panel border-t border-white/5 mt-24 py-12 z-10 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="flex items-center gap-3">
+                <span class="text-lg font-bold text-white">B-Resume<span class="text-cyan-400">X</span></span>
+                <span class="text-xs text-slate-500">| Powered by Deep Semantic ATS NLP & Spacy Intelligence</span>
+            </div>
+            <div class="text-xs text-slate-400">
+                &copy; 2026 B-ResumeX Technologies. Enterprise Multi-Vector Resume Optimization.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Interactive 3D Particles WebGL/Canvas Engine -->
+    <script>
+        (function initCyberCanvas() {
+            const canvas = document.getElementById('cyber-canvas');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let particles = [];
+            const particleCount = 75;
+            let mouse = { x: -1000, y: -1000, radius: 160 };
+
+            function resize() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            window.addEventListener('mousemove', (e) => {
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
+            });
+
+            window.addEventListener('mouseout', () => {
+                mouse.x = -1000;
+                mouse.y = -1000;
+            });
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * width;
+                    this.y = Math.random() * height;
+                    this.vx = (Math.random() - 0.5) * 0.7;
+                    this.vy = (Math.random() - 0.5) * 0.7;
+                    this.radius = Math.random() * 2 + 1;
+                    this.baseColor = Math.random() > 0.5 ? '#6366f1' : '#06b6d4';
+                }
+
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    if (this.x < 0 || this.x > width) this.vx *= -1;
+                    if (this.y < 0 || this.y > height) this.vy *= -1;
+
+                    // Mouse gravity / reaction
+                    const dx = mouse.x - this.x;
+                    const dy = mouse.y - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < mouse.radius) {
+                        const force = (mouse.radius - dist) / mouse.radius;
+                        this.x -= (dx / dist) * force * 3;
+                        this.y -= (dy / dist) * force * 3;
+                    }
+                }
+
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = this.baseColor;
+                    ctx.shadowColor = this.baseColor;
+                    ctx.shadowBlur = 8;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            }
+
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+                
+                // Draw connecting neural lines
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 120) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(99, 102, 241, ${0.18 * (1 - dist / 120)})`;
+                            ctx.lineWidth = 0.8;
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+
+                requestAnimationFrame(animate);
+            }
+            animate();
+        })();
+
+        // Auto-initialize Vanilla Tilt for all elements with data-tilt
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.VanillaTilt) {
+                VanillaTilt.init(document.querySelectorAll("[data-tilt]"), {
+                    max: 12,
+                    speed: 400,
+                    glare: true,
+                    "max-glare": 0.25,
+                    perspective: 1000
+                });
+            }
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

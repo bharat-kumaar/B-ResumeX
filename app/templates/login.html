@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Log In | B-ResumeX{% endblock %}
+{% block content %}
+<div class="flex-grow flex items-center justify-center px-4 py-16 md:py-24 relative overflow-hidden">
+    
+    <!-- Ambient 3D Cyber Glow -->
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-gradient-to-tr from-indigo-600/20 via-purple-600/15 to-cyan-500/20 rounded-full blur-[130px] pointer-events-none -z-10 animate-pulse-glow"></div>
+
+    <div class="w-full max-w-md relative z-10">
+        
+        <!-- 3D Glassmorphic Auth Card -->
+        <div class="glass-card-3d p-8 md:p-10 relative overflow-hidden shadow-2xl border border-indigo-500/30" data-tilt>
+            
+            <!-- Brand Badge -->
+            <div class="text-center mb-8">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-cyan-400 p-[1.5px] shadow-lg shadow-indigo-500/30 mx-auto mb-4 animate-float-slow">
+                    <div class="w-full h-full bg-[#0a0f1d] rounded-[14px] flex items-center justify-center">
+                        <span class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-tr from-indigo-400 to-cyan-300">B</span>
+                    </div>
+                </div>
+                <h2 class="text-2xl md:text-3xl font-black text-white tracking-tight">Welcome Back</h2>
+                <p class="text-xs text-slate-400 mt-1">Access your Neural ATS Resume Matrix</p>
+            </div>
+
+            <!-- Error Banner -->
+            <div id="error-msg" class="hidden mb-6 p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs font-mono flex items-center gap-2">
+                <span>⚠️</span>
+                <span id="error-text"></span>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5 font-bold">Email Address</label>
+                    <div class="relative">
+                        <input type="email" name="email" id="email" required 
+                               class="w-full px-4 py-3 rounded-xl bg-slate-950/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 transition" 
+                               placeholder="alex@tech.io">
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-xs font-mono uppercase tracking-wider text-slate-300 font-bold">Password</label>
+                        <a href="#" onclick="alert('Password reset link sent to registered email in demo.'); return false;" class="text-[11px] text-cyan-400 hover:underline">Forgot?</a>
+                    </div>
+                    <div class="relative">
+                        <input type="password" name="password" id="password" required 
+                               class="w-full px-4 py-3 rounded-xl bg-slate-950/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 transition" 
+                               placeholder="••••••••">
+                    </div>
+                </div>
+
+                <button type="submit" id="btn-submit" class="btn-glow w-full py-3.5 text-sm flex items-center justify-center gap-2 mt-2">
+                    <span id="btn-text">Authenticate & Enter</span>
+                    <span id="btn-spinner" class="hidden w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                </button>
+            </form>
+
+            <!-- Bottom Navigation -->
+            <div class="mt-8 pt-6 border-t border-white/5 text-center">
+                <p class="text-xs text-slate-400">
+                    New to B-ResumeX? 
+                    <a href="/signup" class="text-cyan-400 hover:text-cyan-300 font-bold ml-1 hover:underline">Create Account &rarr;</a>
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const errDiv = document.getElementById('error-msg');
+        const errText = document.getElementById('error-text');
+        const btnText = document.getElementById('btn-text');
+        const btnSpinner = document.getElementById('btn-spinner');
+        const btnSubmit = document.getElementById('btn-submit');
+
+        errDiv.classList.add('hidden');
+        btnText.textContent = 'Verifying credentials...';
+        btnSpinner.classList.remove('hidden');
+        btnSubmit.disabled = true;
+
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    email: e.target.email.value,
+                    password: e.target.password.value
+                })
+            });
+
+            if (res.ok) {
+                if(window.confetti) confetti({ particleCount: 50, spread: 50 });
+                setTimeout(() => window.location.href = '/dashboard', 300);
+            } else {
+                const data = await res.json();
+                errText.textContent = data.detail || 'Authentication failed. Please verify credentials.';
+                errDiv.classList.remove('hidden');
+                btnText.textContent = 'Authenticate & Enter';
+                btnSpinner.classList.add('hidden');
+                btnSubmit.disabled = false;
+            }
+        } catch(err) {
+            errText.textContent = 'Connection error. Please try again.';
+            errDiv.classList.remove('hidden');
+            btnText.textContent = 'Authenticate & Enter';
+            btnSpinner.classList.add('hidden');
+            btnSubmit.disabled = false;
+        }
+    });
+</script>
+{% endblock %}

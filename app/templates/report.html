@@ -1,0 +1,521 @@
+{% extends "base.html" %}
+{% block title %}Neural ATS Matrix | B-ResumeX{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 print:py-0 print:px-0" x-data="{
+    liveScore: 0,
+    rescoring: false,
+    tailoring: false,
+    targetJd: '',
+    analysisId: '{{ analysis_id }}',
+    matchedSkills: [],
+    missingSkills: [],
+    breakdown: {},
+    recommendations: [],
+    
+    async triggerRescore() {
+        if(!this.targetJd.trim()) return;
+        this.rescoring = true;
+        try {
+            const res = await fetch(`/api/analyze/${this.analysisId}/rescore`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ job_description: this.targetJd })
+            });
+            const data = await res.json();
+            if(data.success) {
+                this.liveScore = data.overall_score;
+                this.breakdown = data.scoring.breakdown;
+                this.matchedSkills = data.scoring.matched_skills;
+                this.missingSkills = data.scoring.missing_skills;
+                this.recommendations = data.scoring.recommendations || [];
+                updateScoreVisuals(data.overall_score, data.scoring.breakdown);
+                
+                if (data.overall_score >= 85 && window.confetti) {
+                    confetti({ particleCount: 70, spread: 60, origin: { y: 0.6 } });
+                }
+            }
+        } catch(e) {
+            console.error(e);
+        } finally {
+            this.rescoring = false;
+        }
+    },
+
+    async triggerAITailor() {
+        this.tailoring = true;
+        try {
+            const res = await fetch(`/api/analyze/${this.analysisId}/tailor`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ job_description: this.targetJd, target_skills: this.missingSkills })
+            });
+            const data = await res.json();
+            if(data.success) {
+                this.liveScore = data.scoring.overall_score;
+                this.breakdown = data.scoring.breakdown;
+                this.matchedSkills = data.scoring.matched_skills;
+                this.missingSkills = data.scoring.missing_skills;
+                updateScoreVisuals(data.scoring.overall_score, data.scoring.breakdown);
+                renderOptimizedResume(data.rebuilt);
+                
+                if (window.confetti) {
+                    confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 } });
+                }
+            }
+        } catch(e) {
+            console.error(e);
+        } finally {
+            this.tailoring = false;
+        }
+    }
+}">
+
+    <!-- Top Action Bar -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 print:hidden">
+        <div>
+            <a href="/dashboard" class="text-xs font-mono text-cyan-400 hover:underline mb-2 inline-flex items-center gap-1">
+                <span>&larr;</span> <span>Return to Command Center</span>
+            </a>
+            <h1 class="text-3xl font-black text-white flex items-center gap-3">
+                <span id="report-title">Neural ATS Matrix</span>
+                <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono font-bold">
+                    INDEXED
+                </span>
+            </h1>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button id="btn-export-pdf" class="px-5 py-2.5 rounded-xl border border-white/10 hover:border-cyan-400 bg-slate-900/60 font-semibold text-xs text-white transition flex items-center gap-2" onclick="window.print()">
+                <span>🖨️ Export PDF</span>
+            </button>
+            <button id="btn-edit" class="btn-glow text-xs px-6 py-2.5 flex items-center gap-2">
+                <span>📝 Open Editor</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 3D ATS Compatibility Scorecard -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8 print:hidden">
+        
+        <!-- Score Circular Hub -->
+        <div class="lg:col-span-5 glass-card-3d p-6 relative overflow-hidden flex flex-col justify-between" data-tilt>
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Composite Compatibility</span>
+                    <span class="text-cyan-400 text-xs font-mono font-bold">SPACY MULTI-VECTOR</span>
+                </div>
+                <p class="text-xs text-slate-400 mb-6">Weighted composite score based on hard skills, quantifiable metrics, and action verbs.</p>
+            </div>
+
+            <!-- Big Circular 3D Meter -->
+            <div class="relative w-44 h-44 mx-auto my-2 flex items-center justify-center">
+                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="#172033" stroke-width="8"></circle>
+                    <circle id="score-ring" cx="50" cy="50" r="42" fill="none" stroke="url(#scoreGrad)" stroke-width="8" stroke-dasharray="264" stroke-dashoffset="264" class="transition-all duration-1000 ease-out" stroke-linecap="round"></circle>
+                    <defs>
+                        <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#06b6d4" />
+                            <stop offset="60%" stop-color="#6366f1" />
+                            <stop offset="100%" stop-color="#10b981" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                    <span class="text-5xl font-black text-white font-mono" id="overall-score">-</span>
+                    <span class="text-[10px] uppercase font-bold tracking-widest text-slate-400 mt-1" id="score-tier">EVALUATING</span>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-4 border-t border-white/5 flex items-center justify-between text-xs text-slate-400">
+                <span>ATS Parsing Status:</span>
+                <span class="text-emerald-400 font-bold flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span> 100% Machine Readable
+                </span>
+            </div>
+        </div>
+
+        <!-- Metric Vector Breakdown Bars -->
+        <div class="lg:col-span-7 glass-card-3d p-6 flex flex-col justify-between">
+            <div>
+                <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300 mb-6 flex items-center gap-2">
+                    <span>Algorithm Vectors</span>
+                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/30">5 DIMENSIONS</span>
+                </h3>
+
+                <div class="space-y-4">
+                    <!-- Vector 1 -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-slate-300 font-medium">Keywords & Hard Skills Alignment (40%)</span>
+                            <span id="score-keywords" class="font-mono font-bold text-cyan-400">-</span>
+                        </div>
+                        <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
+                            <div id="bar-keywords" class="bg-cyan-400 h-full w-0 transition-all duration-1000"></div>
+                        </div>
+                    </div>
+
+                    <!-- Vector 2 -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-slate-300 font-medium">Quantified Metric Density (20%)</span>
+                            <span id="score-impact" class="font-mono font-bold text-emerald-400">-</span>
+                        </div>
+                        <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
+                            <div id="bar-impact" class="bg-emerald-400 h-full w-0 transition-all duration-1000"></div>
+                        </div>
+                    </div>
+
+                    <!-- Vector 3 -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-slate-300 font-medium">Action Verb Power Index (20%)</span>
+                            <span id="score-verbs" class="font-mono font-bold text-indigo-400">-</span>
+                        </div>
+                        <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
+                            <div id="bar-verbs" class="bg-indigo-400 h-full w-0 transition-all duration-1000"></div>
+                        </div>
+                    </div>
+
+                    <!-- Vector 4 -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-slate-300 font-medium">Section Structure & Headers (10%)</span>
+                            <span id="score-structure" class="font-mono font-bold text-violet-400">-</span>
+                        </div>
+                        <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
+                            <div id="bar-structure" class="bg-violet-400 h-full w-0 transition-all duration-1000"></div>
+                        </div>
+                    </div>
+
+                    <!-- Vector 5 -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-slate-300 font-medium">Readability & Word Distribution (10%)</span>
+                            <span id="score-readability" class="font-mono font-bold text-amber-400">-</span>
+                        </div>
+                        <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
+                            <div id="bar-readability" class="bg-amber-400 h-full w-0 transition-all duration-1000"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Proactive Recommendations -->
+            <div id="recommendations-container" class="mt-6 pt-4 border-t border-white/5 space-y-2">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Algorithm Feedback:</div>
+                <div id="recommendations-list" class="space-y-1.5 text-xs text-slate-300"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Live Real-Time ATS Matcher Simulator & Auto-Tailor Studio -->
+    <div class="glass-card-3d p-6 mb-8 print:hidden border border-cyan-500/20">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+            <div>
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <span>⚡ Live ATS Matcher & Auto-Tailor Studio</span>
+                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">REAL-TIME SIMULATOR</span>
+                </h3>
+                <p class="text-xs text-slate-400 mt-0.5">Paste or modify any target Job Description to recalculate match percentages or auto-generate keyword-injected bullets.</p>
+            </div>
+            
+            <div class="flex gap-2">
+                <button @click="triggerRescore()" :disabled="rescoring" class="px-5 py-2 rounded-xl bg-slate-900 border border-white/10 hover:border-cyan-400 text-xs font-bold text-white transition flex items-center gap-2">
+                    <span x-show="rescoring" class="w-3.5 h-3.5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></span>
+                    <span x-text="rescoring ? 'Calculating...' : 'Recalculate Score'">Recalculate Score</span>
+                </button>
+                <button @click="triggerAITailor()" :disabled="tailoring" class="btn-glow text-xs px-6 py-2 flex items-center gap-2">
+                    <span x-show="tailoring" class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <span x-text="tailoring ? 'Tailoring Resume...' : '✨ Auto-Tailor Resume'">✨ Auto-Tailor Resume</span>
+                </button>
+            </div>
+        </div>
+
+        <textarea x-model="targetJd" class="w-full h-28 p-4 rounded-xl bg-slate-950/80 border border-white/10 font-mono text-xs text-slate-200 placeholder-slate-500 focus:border-cyan-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 transition" placeholder="Paste updated or new job description text here to live-simulate ATS fit..."></textarea>
+    </div>
+
+    <!-- Keyword Analysis Matrix -->
+    <div class="glass-card-3d p-6 mb-8 print:hidden">
+        <h3 class="text-base font-bold text-white mb-4 flex items-center justify-between">
+            <span>Semantic Entity & Keyword Breakdown</span>
+            <span class="text-xs font-mono text-slate-400">Extracted via Spacy NLP</span>
+        </h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-400">Matched Competencies</h4>
+                </div>
+                <div id="matched-skills" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-rose-500/5 border border-rose-500/20">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-rose-400">Missing Target Keywords</h4>
+                </div>
+                <div id="missing-skills" class="flex flex-wrap gap-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Document Preview Arena -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 print:block">
+        
+        <!-- Original Document Extracted Text -->
+        <div class="glass-card-3d p-6 shadow-sm print:hidden flex flex-col">
+            <h3 class="text-base font-bold text-white mb-4 flex items-center justify-between">
+                <span>Original Extracted Text</span>
+                <span class="text-xs font-mono text-slate-500">Raw Parser Stream</span>
+            </h3>
+            <div class="bg-slate-950/80 border border-white/5 p-5 rounded-xl text-xs font-mono h-[650px] overflow-y-auto whitespace-pre-wrap text-slate-300 selection:bg-cyan-500 selection:text-black" id="raw-text">
+            </div>
+        </div>
+
+        <!-- Optimized Resume Preview (A4 Printable Canvas) -->
+        <div class="glass-card-3d p-6 shadow-sm print:shadow-none print:border-none print:p-0 print:bg-white flex flex-col">
+            <div class="flex justify-between items-center mb-4 print:hidden">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <span>Optimized Resume Preview</span>
+                    <span class="text-xs font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">A4 Ready</span>
+                </h3>
+                <span class="text-xs text-slate-400">Real-time sync</span>
+            </div>
+            
+            <div id="optimized-resume" class="bg-white text-slate-900 p-10 rounded-xl border border-slate-200 h-[650px] overflow-y-auto print:h-auto print:overflow-visible print:border-none print:p-0 font-sans text-sm shadow-xl print:shadow-none leading-relaxed">
+                <!-- Rendered dynamically -->
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Resume JSON Editor Modal -->
+<div id="editor-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 print:hidden">
+    <div class="glass-panel rounded-3xl border border-white/10 shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+        <div class="p-6 border-b border-white/10 flex justify-between items-center bg-slate-950/80">
+            <div>
+                <h3 class="text-xl font-bold text-white">Live Resume Data Architect</h3>
+                <p class="text-xs text-slate-400 font-mono mt-0.5">Edit structured content directly to update the preview and DB</p>
+            </div>
+            <button id="btn-close-editor" class="text-slate-400 hover:text-white text-xl font-mono">&times;</button>
+        </div>
+        <div class="p-6 flex-grow overflow-y-auto">
+            <textarea id="editor-content" class="w-full h-[60vh] font-mono text-xs p-4 bg-slate-950/90 border border-white/10 rounded-xl text-cyan-300 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none transition"></textarea>
+        </div>
+        <div class="p-6 border-t border-white/10 bg-slate-950/80 flex justify-end gap-3">
+            <button id="btn-cancel-editor" class="px-5 py-2.5 rounded-xl border border-white/10 text-xs font-semibold text-slate-300 hover:text-white transition">Cancel</button>
+            <button id="btn-save-editor" class="btn-glow text-xs px-6 py-2.5">Save & Re-Render</button>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    body { background-color: white !important; color: black !important; }
+    #cyber-canvas, header, footer, .print\:hidden { display: none !important; }
+    .print\:block { display: block !important; }
+    .print\:p-0 { padding: 0 !important; }
+    .print\:bg-white { background-color: white !important; }
+    .print\:shadow-none { box-shadow: none !important; }
+    .print\:border-none { border: none !important; }
+    .print\:h-auto { height: auto !important; }
+    .print\:overflow-visible { overflow: visible !important; }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const analysisId = '{{ analysis_id }}';
+    let currentRebuiltData = {};
+
+    function updateScoreVisuals(overallScore, breakdown) {
+        document.getElementById('overall-score').textContent = overallScore + '%';
+        
+        // Circular Gauge
+        const circle = document.getElementById('score-ring');
+        if (circle) {
+            const circumference = 264;
+            const offset = circumference - (circumference * overallScore / 100);
+            circle.style.strokeDashoffset = offset;
+        }
+
+        // Tier Title
+        const tier = document.getElementById('score-tier');
+        if(overallScore >= 85) {
+            tier.textContent = 'EXCEPTIONAL FIT';
+            tier.className = 'text-[10px] uppercase font-bold tracking-widest text-emerald-400 mt-1';
+        } else if(overallScore >= 70) {
+            tier.textContent = 'STRONG CANDIDATE';
+            tier.className = 'text-[10px] uppercase font-bold tracking-widest text-cyan-400 mt-1';
+        } else if(overallScore >= 50) {
+            tier.textContent = 'MODERATE GAP';
+            tier.className = 'text-[10px] uppercase font-bold tracking-widest text-amber-400 mt-1';
+        } else {
+            tier.textContent = 'CRITICAL GAP';
+            tier.className = 'text-[10px] uppercase font-bold tracking-widest text-rose-400 mt-1';
+        }
+
+        // Vectors
+        if(breakdown) {
+            const setVector = (id, val) => {
+                const scoreEl = document.getElementById(`score-${id}`);
+                const barEl = document.getElementById(`bar-${id}`);
+                if(scoreEl && barEl) {
+                    scoreEl.textContent = val + '%';
+                    barEl.style.width = val + '%';
+                }
+            };
+            setVector('keywords', breakdown.keywords || 0);
+            setVector('impact', breakdown.impact_metrics || 0);
+            setVector('verbs', breakdown.action_verbs || 0);
+            setVector('structure', breakdown.structure || 0);
+            setVector('readability', breakdown.readability || 0);
+        }
+    }
+
+    function renderOptimizedResume(rebuilt) {
+        currentRebuiltData = rebuilt;
+        const container = document.getElementById('optimized-resume');
+        if (!container || !rebuilt) return;
+
+        let html = '';
+        if (rebuilt.contact) {
+            html += `
+                <div class="border-b-2 border-slate-900 pb-4 mb-6">
+                    <h1 class="text-2xl font-bold tracking-tight text-slate-900">${rebuilt.contact.name || 'Professional Resume'}</h1>
+                    <div class="text-xs text-slate-600 mt-1 flex flex-wrap gap-3 font-mono">
+                        ${rebuilt.contact.email ? `<span>✉ ${rebuilt.contact.email}</span>` : ''}
+                        ${rebuilt.contact.phone ? `<span>📱 ${rebuilt.contact.phone}</span>` : ''}
+                        ${rebuilt.contact.location ? `<span>📍 ${rebuilt.contact.location}</span>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        if (rebuilt.summary) {
+            html += `
+                <div class="mb-6">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 border-b border-slate-300 pb-1 mb-2">Executive Summary</h2>
+                    <p class="text-xs text-slate-700 leading-relaxed">${rebuilt.summary}</p>
+                </div>
+            `;
+        }
+
+        if (rebuilt.skills && rebuilt.skills.length > 0) {
+            html += `
+                <div class="mb-6">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 border-b border-slate-300 pb-1 mb-2">Technical & Core Competencies</h2>
+                    <div class="flex flex-wrap gap-1.5 pt-1">
+                        ${rebuilt.skills.map(s => `<span class="px-2 py-0.5 bg-slate-100 text-slate-800 rounded text-xs font-mono font-medium">${s}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        if (rebuilt.experience && rebuilt.experience.length > 0) {
+            html += `
+                <div class="mb-6">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 border-b border-slate-300 pb-1 mb-3">Professional Experience</h2>
+                    <div class="space-y-4">
+                        ${rebuilt.experience.map(exp => `
+                            <div>
+                                <div class="flex justify-between items-baseline mb-1">
+                                    <h3 class="text-xs font-bold text-slate-900">${exp.role || 'Role'} <span class="font-normal text-slate-600">&bull; ${exp.company || 'Company'}</span></h3>
+                                    <span class="text-[11px] font-mono text-slate-500">${exp.dates || ''}</span>
+                                </div>
+                                <ul class="list-disc list-outside ml-4 space-y-1 text-xs text-slate-700">
+                                    ${(exp.bullets || []).map(b => `<li>${b}</li>`).join('')}
+                                </ul>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        container.innerHTML = html || '<div class="p-8 text-center text-slate-400">Resume generation pending.</div>';
+    }
+
+    async function loadReport() {
+        try {
+            const res = await fetch(`/api/analyze/${analysisId}`);
+            if (res.ok) {
+                const json = await res.json();
+                const data = json.data;
+                
+                document.getElementById('report-title').textContent = data.resume.filename;
+                document.getElementById('raw-text').textContent = data.result.raw_text || '';
+
+                const scoring = data.result.scoring;
+                updateScoreVisuals(scoring.overall_score, scoring.breakdown);
+
+                // Skills
+                const matchedContainer = document.getElementById('matched-skills');
+                const missingContainer = document.getElementById('missing-skills');
+
+                matchedContainer.innerHTML = (scoring.matched_skills || []).map(s => 
+                    `<span class="px-2.5 py-1 rounded-lg text-xs font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">✓ ${s}</span>`
+                ).join('') || '<span class="text-xs text-slate-500 font-mono">No target skills matched yet.</span>';
+
+                missingContainer.innerHTML = (scoring.missing_skills || []).map(s => 
+                    `<span class="px-2.5 py-1 rounded-lg text-xs font-mono font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/30">✗ ${s}</span>`
+                ).join('') || '<span class="text-xs text-slate-500 font-mono">Zero critical missing skills!</span>';
+
+                // Recommendations
+                const recContainer = document.getElementById('recommendations-list');
+                const recs = scoring.recommendations || [];
+                recContainer.innerHTML = recs.map(r => `<div>&bull; ${r}</div>`).join('') || '<div>Resume formatting meets all algorithmic criteria.</div>';
+
+                // Initial A4 Optimized Resume Render
+                renderOptimizedResume(data.rebuilt);
+            }
+        } catch(e) {
+            console.error(e);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadReport);
+
+    // Editor Handlers
+    const editorModal = document.getElementById('editor-modal');
+    const editorContent = document.getElementById('editor-content');
+    const btnEdit = document.getElementById('btn-edit');
+    const btnCloseEditor = document.getElementById('btn-close-editor');
+    const btnCancelEditor = document.getElementById('btn-cancel-editor');
+    const btnSaveEditor = document.getElementById('btn-save-editor');
+
+    btnEdit.addEventListener('click', () => {
+        editorContent.value = JSON.stringify(currentRebuiltData, null, 2);
+        editorModal.classList.remove('hidden');
+    });
+
+    const closeModal = () => editorModal.classList.add('hidden');
+    btnCloseEditor.addEventListener('click', closeModal);
+    btnCancelEditor.addEventListener('click', closeModal);
+
+    btnSaveEditor.addEventListener('click', async () => {
+        try {
+            const parsed = JSON.parse(editorContent.value);
+            const res = await fetch(`/api/analyze/${analysisId}/rebuilt`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rebuilt_json: parsed })
+            });
+            if(res.ok) {
+                renderOptimizedResume(parsed);
+                closeModal();
+                if(window.confetti) confetti({ particleCount: 50, spread: 60 });
+            } else {
+                alert('Save failed.');
+            }
+        } catch(e) {
+            alert('Invalid JSON syntax: ' + e.message);
+        }
+    });
+</script>
+{% endblock %}

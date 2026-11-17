@@ -2,6 +2,12 @@ venv/
 __pycache__/
 .pytest_cache/
 uploads/*
+!uploads/.gitkeep
 reports/*
 *.pyc
 .env
+data/*.db
+dummy.txt
+test.docx
+test_api.py
+*.log
